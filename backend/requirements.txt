@@ -1,0 +1,7 @@
+# Runtime dependencies — installed in the production image. Keep pinned.
+Django==6.1.3
+django-ninja==1.8.0
+pydantic==2.14.3
+httpx==0.28.1
+whitenoise==6.12.0
+gunicorn==26.2.0

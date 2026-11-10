@@ -1,0 +1,7 @@
+dist*
+node_modules
+pnpm-lock.yaml
+src/routeTree.gen.ts
+# Written by the backend's `manage.py export_ts`, whose --check compares bytes.
+src/integrations/rpc/api.gen.ts
+src/components/ui

@@ -1,0 +1,9 @@
+# Tooling for local development and CI. Never imported by runtime code.
+-r requirements.txt
+pytest==9.2.0
+pytest-django==4.14.0
+respx==0.23.1
+ruff==0.17.4
+mypy==2.4.1
+django-stubs==6.1.2
+import-linter==2.16

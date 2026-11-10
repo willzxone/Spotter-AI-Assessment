@@ -1,0 +1,21 @@
+# Render Blueprint: one Docker web service serving the API and the built frontend.
+# New > Blueprint in the Render dashboard, pick this repo, and Render reads this file.
+services:
+  - type: web
+    name: weather-aware-truck-routing
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # Readiness: 200 once every module has booted, so a misconfigured deploy never takes traffic.
+    healthCheckPath: /readyz
+    envVars:
+      # Render generates a random value once and keeps it across deploys.
+      - key: SECRET_KEY
+        generateValue: true
+      # Render's load balancer is the one hop in front of the app, so rate limits key on the
+      # client's address rather than the proxy's.
+      - key: NUM_PROXIES
+        value: "1"
+      # ALLOWED_HOSTS is not needed: Render injects RENDER_EXTERNAL_HOSTNAME (the
+      # onrender.com name) and the app trusts it. Set ALLOWED_HOSTS only for a custom domain.

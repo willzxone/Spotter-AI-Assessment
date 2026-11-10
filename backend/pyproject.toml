@@ -1,0 +1,101 @@
+[project]
+name = "weather-aware-truck-routing"
+version = "1.0.0"
+requires-python = ">=3.13"
+# Dependencies are pinned in requirements.txt / requirements-dev.txt; this file only
+# configures the tools.
+
+[tool.ruff]
+line-length = 110
+target-version = "py313"
+extend-exclude = ["staticfiles"]
+
+[tool.ruff.lint]
+select = [
+  "E", "W", "F",   # pycodestyle, pyflakes
+  "I",             # import order
+  "B",             # bugbear
+  "UP",            # pyupgrade
+  "S",             # bandit
+  "DTZ",           # naive datetimes
+  "RUF",
+  "SIM",
+  "PT",            # pytest style
+  "TID",           # banned imports
+]
+ignore = [
+  "RUF001",        # "–" en dashes in docstrings are intentional (they mirror the brief's table)
+  "RUF002",
+  "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+plugins = ["mypy_django_plugin.main", "pydantic.mypy"]
+exclude = ["^staticfiles/", "^\\.venv/"]
+
+[[tool.mypy.overrides]]
+module = ["whitenoise.*"]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "server.settings_test"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "server.settings_test"
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+filterwarnings = [
+    "error::DeprecationWarning:ninja.*",
+    # WhiteNoise checks STATIC_ROOT, which only exists after `collectstatic` (the Docker build runs it).
+    "ignore:No directory at:UserWarning",
+]
+
+# Architecture rules, enforced by `lint-imports` (see docs/architecture.md).
+[tool.importlinter]
+root_packages = ["common", "core", "modules", "server"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Layers: server -> modules -> core -> common"
+type = "layers"
+layers = ["server", "modules", "core", "common"]
+# The kernel's one way into modules/: the registry.
+ignore_imports = ["core.kernel -> modules"]
+
+[[tool.importlinter.contracts]]
+name = "Feature modules never reach into another module's adapters, wiring or router"
+type = "forbidden"
+source_modules = ["modules.trips", "modules.risk", "modules.routing", "modules.weather", "modules.geocoding"]
+forbidden_modules = [
+  "modules.routing.adapters", "modules.routing.module",
+  "modules.weather.adapters", "modules.weather.module",
+  "modules.geocoding.adapters", "modules.geocoding.module", "modules.geocoding.router",
+  "modules.risk.module", "modules.risk.router",
+  "modules.trips.module", "modules.trips.router",
+]
+# Each module's own wiring imports its own adapters and router.
+ignore_imports = [
+  "modules.routing.module -> modules.routing.adapters",
+  "modules.weather.module -> modules.weather.adapters",
+  "modules.geocoding.module -> modules.geocoding.adapters",
+  "modules.geocoding.module -> modules.geocoding.router",
+  "modules.risk.module -> modules.risk.router",
+  "modules.trips.module -> modules.trips.router",
+]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Pure logic stays pure: the risk rules and geo maths do no I/O"
+type = "forbidden"
+# The rules themselves, not the risk module's router/wiring (those are thin Django glue).
+source_modules = ["common", "modules.risk.service", "modules.risk.constants", "modules.risk.dto"]
+forbidden_modules = ["django", "httpx", "modules.routing", "modules.weather", "modules.geocoding", "modules.trips"]
+allow_indirect_imports = true
