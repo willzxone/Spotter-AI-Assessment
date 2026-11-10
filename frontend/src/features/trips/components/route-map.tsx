@@ -14,12 +14,17 @@ export function RouteMap({ className, children, ...options }: Props) {
   const { containerRef, ready } = useRouteMap(options)
   return (
     <div className={cn('relative overflow-hidden', className)}>
-      <div
-        ref={containerRef}
-        role="region"
-        aria-label="Route map"
-        className="absolute inset-0"
-      />
+      {/* MapLibre's stylesheet gives its container `position: relative`, and as unlayered
+          CSS it beats Tailwind's utilities, so the container must not rely on `absolute`
+          for its size: the wrapper is positioned, the map element only fills it. */}
+      <div className="absolute inset-0">
+        <div
+          ref={containerRef}
+          role="region"
+          aria-label="Route map"
+          className="size-full"
+        />
+      </div>
       {!ready && <Skeleton className="absolute inset-0 rounded-none" />}
       {children}
     </div>

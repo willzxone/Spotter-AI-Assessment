@@ -194,8 +194,9 @@ function fitPadding(map: MaplibreMap) {
   const side = Math.min(48, w * 0.1)
   return {
     top: Math.min(56, h * 0.12),
-    // Room for the heatmap slider laid over the bottom of the map.
-    bottom: Math.min(120, h * 0.25),
+    // Room for the heatmap slider laid over the bottom of the map: it is about
+    // 120px from the map's bottom edge on a desktop, a little more when its legend wraps.
+    bottom: Math.min(150, h * 0.35),
     left: side,
     right: side,
   }
@@ -269,6 +270,10 @@ export function useRouteMap({
     if (!plan) return
     const bounds = boundsOf(plan.routes.flatMap((r) => r.geometry))
     if (bounds) {
+      // The first plan also mounts the checkpoint table, which shrinks the map in this
+      // same commit. MapLibre's own resize observer fires later, so without this the
+      // camera would frame the routes for the old, taller canvas and cut off the end.
+      map.resize()
       map.fitBounds(bounds, {
         padding: fitPadding(map),
         maxZoom: 10,

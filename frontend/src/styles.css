@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import 'maplibre-gl/dist/maplibre-gl.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -79,10 +78,4 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
-}
-
-/* MapLibre popups inherit the app's type and colours rather than their own. */
-.maplibregl-popup-content {
-  @apply rounded-lg bg-popover p-3 text-popover-foreground shadow-md;
-  font: inherit;
 }
